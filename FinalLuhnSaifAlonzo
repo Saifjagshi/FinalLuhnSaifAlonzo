@@ -1,0 +1,118 @@
+import csv
+import os
+
+def printMenu():
+    print('''
+          Customer and Sales System\n
+          1. Enter Customer Information\n
+          2. Generate Customer Data File\n
+          3. Quit\n
+          Enter menu option (1-3)
+          ''')
+
+def enterCustomerInfo(customers):
+    # Get customer information
+    firstName = input("What is your first name?: ")
+    lastName = input("What is your last name?: ")
+    city = input("What is your city?: ")
+    validatePostalCode()
+    creditCard = validateCreditCard()
+
+    # Generate unique customer ID
+    customerID = len(customers) + 1
+
+    # Save the customer info as a dictionary
+    customer = {
+        "Customer ID": customerID,
+        "First Name": firstName,
+        "Last Name": lastName,
+        "City": city,
+        "Postal Code": postal,
+        "Credit Card": credit_card
+        }
+    customers.append(customer)
+    print(f"Customer information saved successfully! Customer ID: {customerID}")
+
+def validatePostalCode():
+    global postal
+    
+    while True:
+        postal = input("What are the first 3 digits of your postal code? (Format XXX): ").upper()
+        if len(postal) != 3 or not postal.isalnum():
+            print("Invalid format. Please ensure it's exactly 3 alphanumeric characters.")
+            continue
+
+        try:
+            with open("C:/Users/saifj/Downloads/postal_codes.csv", 'r', newline='') as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if row and postal == row[0][:3].upper():
+                        print("Postal code validated successfully.")
+                        return postal
+            print("Postal code not found in the database. Please try again.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+
+def validateCreditCard():
+    global credit_card
+    
+    def luhn_algorithm(card_number):
+        digits = [int(d) for d in str(card_number)]
+        checksum = 0
+        for i, digit in enumerate(reversed(digits)):
+            if i % 2 == 1:
+                digit *= 2
+                if digit > 9:
+                    digit -= 9
+            checksum += digit
+        return checksum % 10 == 0
+
+    while True:
+        credit_card = input("Please enter your credit card number (9 to 16 digits): ").strip()
+        if not credit_card.isdigit() or not (9 <= len(credit_card) <= 16):
+            print("Invalid input. Please enter a number with 9 to 16 numeric digits.")
+            continue
+        if luhn_algorithm(credit_card):
+            print("The credit card is valid.")
+            return credit_card
+        else:
+            print("The credit card is not valid. Please try again.")
+
+def generateCustomerDataFile(customers):
+    if not customers:
+        print("No customer data to save. Please enter customer information first.")
+        return
+
+    fileName = input("Enter the name for the output file (without extension): ") + ".csv"
+    try:
+        with open(fileName, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ["Customer ID", "First Name", "Last Name", "City", "Postal Code", "Credit Card"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
+            for customer in customers:
+                writer.writerow(customer)
+
+        print(f"Customer data saved successfully to {fileName}!")
+    except Exception as e:
+        print(f"An unexpected error occurred while saving the file: {e}")
+
+# Main program
+userInput = ""
+enterCustomerOption = "1"
+generateCustomerOption = "2"
+exitCondition = "3"
+customers = []
+
+while userInput != exitCondition:
+    printMenu()
+    userInput = input()
+
+    if userInput == enterCustomerOption:
+        enterCustomerInfo(customers)
+    elif userInput == generateCustomerOption:
+        generateCustomerDataFile(customers)
+    elif userInput == exitCondition:
+        print("Program Terminated")
+    else:
+        print("Please type in a valid option (A number from 1-3)")
